@@ -1,0 +1,4 @@
+.eslintrc.json
+.vscode/
+assets/
+node_modules/
