@@ -5,9 +5,10 @@
 
 /* global document, Office */
 
+let attachmentList = [];
+
 Office.onReady((info) => {
   if (info.host === Office.HostType.Outlook) {
-    document.getElementById("sideload-msg").style.display = "none";
     document.getElementById("app-body").style.display = "flex";
     document.getElementById("run").onclick = run;
   }
@@ -19,23 +20,31 @@ function getEmailImageUrls(emailContent) {
     var doc = parser.parseFromString(emailContent, "text/html");
     var imageElements = doc.getElementsByTagName("img");
     var imageUrls = [];
-
     for (var i = 0; i < imageElements.length; i++) {
+      console.log(imageElements[i]);
       var imageUrl = imageElements[i].src;
       imageUrls.push(imageUrl);
     }
     return imageUrls;
 }
 
-function getImages() {
-  Office.context.mailbox.item.body.getAsync(Office.CoercionType.Html, function(result) {
+async function getImages() {
+  Office.context.mailbox.item.body.getAsync(Office.CoercionType.Html, async function(result) {
     if (result.status === Office.AsyncResultStatus.Succeeded) {
       var emailContent = result.value;
+      console.log(emailContent);
       var imageUrls = getEmailImageUrls(emailContent);
-      // Use the image URLs here
       console.log(imageUrls);
+      for(var i=0; i<imageUrls.length; i++){
+        var imageUrl = imageUrls[i];
+        if(imageUrl.indexOf("cid") > -1){
+          await fetchAttachments(imageUrl.split(":")[1]);
+        }
+        else{
+          
+        }
+      }
     } else {
-      // Handle the error
       console.error(result.error);
     }
   });
@@ -52,7 +61,7 @@ function getItemRestId(itemId) {
   }
 }
 
-function fetchAttachments() {
+async function fetchAttachments(contentId) {
   Office.context.mailbox.getCallbackTokenAsync(function(result) {
     if (result.status === Office.AsyncResultStatus.Succeeded) {
       var accessToken = result.value;
@@ -72,7 +81,11 @@ function fetchAttachments() {
           for (var i = 0; i < attachments.length; i++) {
             var attachment = attachments[i];
             console.log(attachment);
-            console.log(attachment.ContentBytes);
+            if(attachment.ContentId != contentId)
+            {
+              continue;
+            }
+            attachmentList.push(attachment.ContentBytes);
           }
         },
         error: function(error) {
@@ -103,5 +116,6 @@ function convertRemoteImageToBase64(imageUrl, callback) {
 
 
 export async function run() {
-  fetchAttachments();
+  await getImages();
+  console.log(attachmentList);
 }
