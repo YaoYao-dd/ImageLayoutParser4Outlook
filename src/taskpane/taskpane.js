@@ -98,7 +98,7 @@ async function fetchAttachments(contentId, width, height) {
                 // console.log(height + ":" + img.height);
                 // let utterance = new SpeechSynthesisUtterance("Hello world!");
                 // speechSynthesis.speak(utterance);
-                showModalDialog();
+                //showModalDialog();
               }
             });
             
